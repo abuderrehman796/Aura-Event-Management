@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA | Event Management</title>
+    <style>
+        /* --- 1. CORE VARIABLES & RESET --- */
+        :root {
+            --bg-color: #fafafa;
+            --text-main: #1a1a1a;
+            --text-muted: #757575;
+            --border-color: #e0e0e0;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --spacing-unit: 2rem;
+            --card-radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        button { cursor: pointer; font-family: inherit; }
+        
+        /* --- 2. LAYOUT UTILITIES --- */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-unit);
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 4rem; /* Space for bottom widgets */
+        }
+
+        /* --- 3. LANDING PAGE STYLES --- */
+        #landing-page {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 80vh;
+            animation: fadeIn 1s ease;
+        }
+
+        .brand-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            line-height: 1.1;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            max-width: 800px;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 500px;
+            margin-bottom: 3rem;
+        }
+
+        .btn-enter {
+            background: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-enter:hover { transform: translateY(-2px); }
+
+        /* --- 4. APP DASHBOARD STYLES --- */
+        #app-dashboard {
+            display: none; /* Hidden by default */
+            padding-top: 6rem;
+            animation: slideUp 0.6s ease;
+        }
+
+        /* App Navigation */
+        .app-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            padding: 0.5rem 0;
+            margin-right: 1.5rem;
+            position: relative;
+        }
+
+        .nav-btn.active { color: var(--text-main); font-weight: 600; }
+        .nav-btn.active::after {
+            content: ''; position: absolute; bottom: -1rem; left: 0; 
+            width: 100%; height: 2px; background: var(--text-main);
+        }
+
+        /* Inputs & Forms */
+        .form-group { margin-bottom: 1.5rem; }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 0;
+            font-size: 1rem;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            border-radius: 0;
+            outline: none;
+            font-family: var(--font-main);
+            transition: border-color 0.3s;
+            resize: vertical;
+        }
+
+        input:focus, textarea:focus { border-bottom-color: var(--text-main); }
+        input::placeholder, textarea::placeholder { color: #aaa; }
+
+        /* Cards */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .event-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .event-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 500; }
+        .event-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .event-card strong { 
+            display: inline-block; 
+            margin-top: 1rem; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.1em; 
+            border: 1px solid #ddd;
+            padding: 3px 8px;
+        }
+
+        .btn-action {
+            margin-top: 1.5rem;
+            background: transparent;
+            border: 1px solid #ff4d4d;
+            color: #ff4d4d;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        .btn-action:hover { background: #ff4d4d; color: white; }
+
+        .btn-create {
+            background: var(--text-main);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            margin-top: 1rem;
+        }
+
+        /* --- 5. SYSTEM PLUG-INS (WIDGET STYLE) --- */
+        .plugins-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 4rem;
+            border-top: 1px dashed #ccc; /* Dashed line to signify separate module */
+            padding-top: 3rem;
+        }
+
+        .plugin-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* "System" Header for Plug-ins */
+        .plugin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 1rem;
+        }
+
+        .plugin-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-main);
+        }
+
+        .plugin-status {
+            font-size: 0.7rem;
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #555;
+        }
+
+        /* Content inside plug-ins */
+        .plugin-content p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        /* Small form adjustments for widget */
+        .plugin-form input, .plugin-form textarea {
+            font-size: 0.9rem;
+            padding: 8px 0;
+        }
+        .plugin-form .btn-create {
+            width: 100%;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        /* Animations & Utilities */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .section { display: none; }
+        .section.active { display: block; }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            .container { padding: 0 1.5rem; }
+            .plugins-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-logo">AURA.</div>
+
+    <div class="container">
+        
+        <div id="landing-page">
+            <div class="hero">
+                <h1>We curate moments<br>that matter.</h1>
+                <p>Aura is an intuitive event management system designed for clarity, precision, and seamless execution.</p>
+                <button class="btn-enter" onclick="enterApp()">Enter System</button>
+            </div>
+        </div>
+
+        <div id="app-dashboard">
+            
+            <nav class="app-nav">
+                <button class="nav-btn active" id="nav-browse" onclick="showSection('browse')">Browse Events</button>
+                <button class="nav-btn" id="nav-create" onclick="showSection('create')">Create New</button>
+                <button class="nav-btn" id="nav-manage" onclick="showSection('manage')">Manage</button>
+            </nav>
+
+            <section id="browse" class="section active">
+                <div id="eventsGrid" class="events-grid"></div>
+            </section>
+
+            <section id="create" class="section">
+                <div style="max-width: 500px;">
+                    <h2 style="margin-bottom: 2rem; font-weight: 300;">New Event Details</h2>
+                    <div class="form-group">
+                        <input id="title" placeholder="Event Title">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.8rem; color: #999; text-transform: uppercase;">Date & Time</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <input id="date" type="date">
+                            <input id="time" type="time">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input id="evtLocation" placeholder="Location">
+                    </div>
+                    <div class="form-group">
+                        <input id="category" type="text" placeholder="Category (e.g. Workshop, Gala)">
+                    </div>
+                    <button type="button" class="btn-create" onclick="saveEvent()">Publish Event</button>
+                </div>
+            </section>
+
+            <section id="manage" class="section">
+                <div id="manageGrid" class="events-grid"></div>
+            </section>
+
+            <div class="plugins-container">
+                
+                <div class="plugin-card">
+                    <div class="plugin-header">
+                        <span class="plugin-title">About</span>
+                        <span class="plugin-status">v1.0.4</span>
+                    </div>
+                    <div class="plugin-content">
+                        <p><strong>AURA</strong> is a proprietary Event Management System engineered in 2025.</p>
+                        <p>Developed by three Computer Science students at <strong>UET Lahore</strong>, this platform is designed to streamline academic and social scheduling across campus.</p>
+                        <p style="font-size: 0.85rem; margin-top: 1rem; color: #999;">
+                            Current Build: Production<br>
+                            Location: Lahore, PK
+                        </p>
+                    </div>
+                </div>
+
+                <div class="plugin-card">
+                    <div class="plugin-header">
+                        <span class="plugin-title">Contact</span>
+                        <span class="plugin-status">Online</span>
+                    </div>
+                    <div class="plugin-content plugin-form">
+                        <input type="text" id="contactName" placeholder="User Name">
+                        <input type="tel" id="contactPhone" placeholder="Phone / Contact">
+                        <input type="email" id="contactEmail" placeholder="Email Address">
+                        <textarea id="contactQuery" rows="2" placeholder="Describe your issue..."></textarea>
+                        <button type="button" class="btn-create" onclick="sendContact()">Submit Querry</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA STATE ---
+        let events = [];
+
+        // --- NAVIGATION LOGIC ---
+        function enterApp() {
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('app-dashboard').style.display = 'block';
+            renderEvents(); 
+            window.scrollTo(0, 0);
+        }
+
+        function showSection(id) {
+            document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+            document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
+            document.getElementById(`nav-${id}`).classList.add("active");
+
+            if(id === "browse") renderEvents();
+            if(id === "manage") renderManage();
+        }
+
+        // --- APP FUNCTIONALITY ---
+        function saveEvent() {
+            const title = document.getElementById("title").value.trim();
+            const date = document.getElementById("date").value;
+            const time = document.getElementById("time").value;
+            const location = document.getElementById("evtLocation").value.trim();
+            const category = document.getElementById("category").value.trim();
+
+            if(!title || !date || !time || !location || !category){
+                alert("Please fill in all details to proceed.");
+                return;
+            }
+
+            const newEvent = { id: Date.now(), title, date, time, location, category };
+            events.push(newEvent);
+
+            // Clear inputs
+            document.getElementById("title").value = "";
+            document.getElementById("date").value = "";
+            document.getElementById("time").value = "";
+            document.getElementById("evtLocation").value = "";
+            document.getElementById("category").value = "";
+
+            showSection("browse");
+        }
+
+        function renderEvents() {
+            const grid = document.getElementById("eventsGrid");
+            if(events.length === 0){
+                grid.innerHTML = "<p style='color:#999;'>No upcoming events found.</p>";
+                return;
+            }
+            grid.innerHTML = events.map(e => `
+                <div class="event-card">
+                    <h3>${e.title}</h3>
+                    <p>${e.date} &mdash; ${e.time}</p>
+                    <p style="color: var(--text-main);">${e.location}</p>
+                    <strong>${e.category}</strong>
+                </div>
+            `).join("");
+        }
+
+        function renderManage() {
+            const grid = document.getElementById("manageGrid");
+            if(events.length === 0){
+                grid.innerHTML = "<p style='color:#999;'>No events to manage.</p>";
+                return;
+            }
+            grid.innerHTML = events.map(e => `
+                <div class="event-card">
+                    <h3>${e.title}</h3>
+                    <p>${e.date} | ${e.time}</p>
+                    <p>${e.location}</p>
+                    <strong>${e.category}</strong>
+                    <div style="margin-top:1rem;">
+                        <button class="btn-action" onclick="deleteEvent(${e.id})">Remove</button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function deleteEvent(id){
+            if(confirm("Are you sure you want to remove this event?")) {
+                events = events.filter(e => e.id !== id);
+                renderManage();
+            }
+        }
+
+        // --- PLUG-IN FUNCTIONALITY ---
+        function sendContact() {
+            const name = document.getElementById('contactName').value;
+            const query = document.getElementById('contactQuery').value;
+            
+            if(!name || !query) {
+                alert("Plug-in Error: Name and Query fields are required.");
+                return;
+            }
+            
+            // Simulating a system submission
+            alert(`[System]: Ticket created for user ${name}.\nQuery: "${query}"\nStatus: Sent to Admin.`);
+            
+            // Clear form
+            document.getElementById('contactName').value = "";
+            document.getElementById('contactPhone').value = "";
+            document.getElementById('contactEmail').value = "";
+            document.getElementById('contactQuery').value = "";
+        }
+    </script>
+</body>
+</html>
