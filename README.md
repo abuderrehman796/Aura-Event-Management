@@ -1,5 +1,4 @@
-# Aura-Event-Management
-A minimalist Event Management System built with HTML, CSS, and SQL.
+
 # AURA | Event Management System 🌌
 
 AURA is a modern, minimalist platform designed to streamline event organization and registration. This project was developed as part of the AICT course at UET Lahore.
